@@ -1,4 +1,11 @@
-How to use format convert script?
+# Warning
+1.Please don't spread it into some community like AGMG which don't allow this kind of technique, or you may
+ get a forever ban from these kinds of community.
+
+2.Respect other's mod work, be nice to use it with only learn and reference purpose.
+
+3.The MIT LICENSE is only used to protect these code itself,Use these scripts at your own risk.
+# How to use format convert script?
 
 First, open the mod's .ini file and check the format, if IB file's format is
 DXGI_FORMAT_R16_UINT, you need to set dxgi_format = DXGI_FORMAT_R16_UINT,
