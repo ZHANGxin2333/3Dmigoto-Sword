@@ -34,3 +34,8 @@ And if it's needed, set the correct format in vertex_attr.ini,normally
 you won't need to set this,but sometimes need to do, for example: weapon mod.
 
 Techniquely all 3dmigoto mod can be reverse,so just be patience and don't give up.
+
+If you have any question or technique problem, you can ask me in ShaderFreedom Pro community,
+or just  open an issue.
+
+https://discord.gg/gEzkrsvJCt
