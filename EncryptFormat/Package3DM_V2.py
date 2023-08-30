@@ -1,6 +1,12 @@
 import os
 import struct
 
+'''
+这种单纯的把文件全塞到一起的方式肯定是不行的，得设计一套专门的文件格式，利用索引偏移，存储不同类型的资源列表
+前提条件是搞懂3Dmigoto到底是怎么解析资源文件的，以及解析后在内存中存放的结构是怎样的。
+
+
+'''
 
 def traverse_folder(folder_path):
     file_list = []
