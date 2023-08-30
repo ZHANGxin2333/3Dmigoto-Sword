@@ -155,37 +155,29 @@ if __name__ == "__main__":
         # move ib file to reverse folder
         # 只有offset = 0 的能直接复制过去，其他的都要减去offset
         # shutil.copy2(reverse_mod_path + ib_file_name, output_folder + ib_file_name)
-        if offset == 0:
-            ib_file_move_path = reverse_mod_path + ib_file_name
-            if os.path.exists(ib_file_move_path):
-                shutil.copy2(ib_file_move_path, output_folder + ib_file_name)
-            else:
-                print("Not a uniform format, Plese move it manually!")
-        else:
-            ib_file = open(reverse_mod_path + ib_file_name,"rb")
-            ib_file_bytearray = bytearray(ib_file.read())
-            ib_file.close()
+        ib_file = open(reverse_mod_path + ib_file_name, "rb")
+        ib_file_bytearray = bytearray(ib_file.read())
+        ib_file.close()
 
-            i = 0
-            new_ib_file_bytearray = bytearray()
-            while i < len(ib_file_bytearray):
-                tmp_byte = struct.pack(write_pack_sign, struct.unpack(read_pack_sign, ib_file_bytearray[i:i + read_pack_stride])[0])
-                int_num = int.from_bytes(tmp_byte, "little")
-                real_num = int(int_num - offset/stride)
-                # print(real_num)
+        i = 0
+        new_ib_file_bytearray = bytearray()
+        while i < len(ib_file_bytearray):
+            tmp_byte = struct.pack(write_pack_sign,
+                                   struct.unpack(read_pack_sign, ib_file_bytearray[i:i + read_pack_stride])[0])
+            int_num = int.from_bytes(tmp_byte, "little")
+            real_num = int(int_num - offset / stride)
+            # print(real_num)
 
+            real_byte = int.to_bytes(real_num, signed=False, byteorder="little", length=read_pack_stride)
+            # print(tmp_byte)
+            # print(real_byte)
+            # print(int.to_bytes(int_num, signed=False, byteorder="little",length=4))
+            new_ib_file_bytearray += real_byte
+            i += read_pack_stride
 
-                real_byte = int.to_bytes(real_num, signed=False, byteorder="little", length=read_pack_stride)
-                # print(tmp_byte)
-                # print(real_byte)
-                # print(int.to_bytes(int_num, signed=False, byteorder="little",length=4))
-                new_ib_file_bytearray += real_byte
-                i += read_pack_stride
-
-            new_ib_file = open(output_folder + ib_file_name,"wb")
-            new_ib_file.write(new_ib_file_bytearray)
-            new_ib_file.close()
-
+        new_ib_file = open(output_folder + ib_file_name, "wb")
+        new_ib_file.write(new_ib_file_bytearray)
+        new_ib_file.close()
 
         vb_file = open(output_vb_filename, "rb")
         vb_file_bytearray = bytearray(vb_file.read())
@@ -194,13 +186,11 @@ if __name__ == "__main__":
         print("len(vb_file_bytearray) / stride")
         print(len(vb_file_bytearray) / stride)
 
-
         left_offset = offset
         right_offset = offset + stride * (category_offset + 1)
 
         print("Left: " + str(left_offset/stride) + "  Right: " + str(right_offset/stride))
         output_vb_bytearray = vb_file_bytearray[left_offset:right_offset]
-
 
         print(len(output_vb_bytearray) / stride)
         output_vb_file = open(output_folder + vb_file_name, "wb")
