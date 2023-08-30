@@ -68,7 +68,7 @@ if __name__ == "__main__":
     category_vb_bytearray_list_dict = {}
     for category in category_vb_filename_dict:
         vb_filename = category_vb_filename_dict.get(category)
-        # TODO collect from Position,Texcoord,Blend
+
         tmp_vb_file = open(reverse_mod_path + vb_filename, "rb")
         data = bytearray(tmp_vb_file.read())
         tmp_vb_file.close()
@@ -130,7 +130,7 @@ if __name__ == "__main__":
     fmt_str = fmt_str + "stride: " + str(stride) + "\n"
     fmt_str = fmt_str + "topology: " + "trianglelist" + "\n"
 
-    fmt_str = fmt_str + "format: " + dxgi_format + "\n"
+    fmt_str = fmt_str + "format: " + write_dxgi_format + "\n"
     fmt_str = fmt_str + element_str
 
     # Write to .fmt file.
@@ -169,7 +169,7 @@ if __name__ == "__main__":
             i = 0
             new_ib_file_bytearray = bytearray()
             while i < len(ib_file_bytearray):
-                tmp_byte = struct.pack(pack_sign, struct.unpack(unpack_sign, ib_file_bytearray[i:i + read_pack_stride])[0])
+                tmp_byte = struct.pack(write_pack_sign, struct.unpack(read_pack_sign, ib_file_bytearray[i:i + read_pack_stride])[0])
                 int_num = int.from_bytes(tmp_byte, "little")
                 real_num = int(int_num - offset/stride)
                 # print(real_num)
