@@ -38,19 +38,24 @@ output_ib_filename = output_folder + mod_name + ".ib"
 output_vb_filename = output_folder + mod_name + ".vb"
 output_fmt_filename = output_folder + mod_name + ".fmt"
 
-dxgi_format = preset_config["General"]["dxgi_format"]
+# ------------------   format    --------------------------
+read_dxgi_format = preset_config["General"]["read_dxgi_format"]
+write_dxgi_format = preset_config["General"]["write_dxgi_format"]
 
-pack_sign = 'i'
-unpack_sign = 'I'
-pack_stride = 4
+read_pack_sign = 'H'
+write_pack_sign = 'H'
+read_pack_stride = 2
 
-if dxgi_format == "DXGI_FORMAT_R16_UINT":
-    pack_stride = 2
-    pack_sign = '1H'
-    unpack_sign = '1H'
+if read_dxgi_format == "DXGI_FORMAT_R16_UINT":
+    read_pack_stride = 2
+    read_pack_sign = 'H'
 
-if dxgi_format == "DXGI_FORMAT_R32_UINT":
-    pack_stride = 4
-    pack_sign = 'i'
-    unpack_sign = 'I'
+if read_dxgi_format == "DXGI_FORMAT_R32_UINT":
+    read_pack_stride = 4
+    read_pack_sign = 'I'
 
+if write_dxgi_format == "DXGI_FORMAT_R16_UINT":
+    write_pack_sign = 'H'
+
+if write_dxgi_format == "DXGI_FORMAT_R32_UINT":
+    write_pack_sign = 'I'

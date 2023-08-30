@@ -1,41 +1,14 @@
-# Warning
-1.Please don't spread it into some community like AGMG which don't allow this kind of technique, or you may
- get a forever ban from these kinds of community.
+# 逆向脚本
+本仓库提供的代码，可以用于任意3Dmigoto mod的逆向转换为.ib和.vb模型，
+且转换为模型后还可以导出，导出后重新分割为buf文件，
+也就是可以做到修改别人mod的效果，一大利器，逆向mod应该是每个modder必备的技能。
 
-2.Respect other's mod work, be nice to use it with only learn and reference purpose.
+# 警告
+- 尊重他人Mod作品，合理使用此脚本
+- 不要去除别人模型中的水印后重新发布为自己的mod
+- 不要复制粘贴别人的高质量作品到你的mod里
+- 不要把逆向脚本传播到一些禁止逆向脚本的社区，比如AGMG，否则可能会被他们BAN掉
+- 发布Mod记得像发布MMD模型一样带上使用允许范围之类的说明文件来保护你的权益
 
-3.The MIT LICENSE is only used to protect these code itself,Use these scripts at your own risk.
-# How to use format convert script?
-
-First, open the mod's .ini file and check the format, if IB file's format is
-DXGI_FORMAT_R16_UINT, you need to set dxgi_format = DXGI_FORMAT_R16_UINT,
-if it is DXGI_FORMAT_R32_UINT, you need to set dxgi_format = DXGI_FORMAT_R32_UINT
- in reverse.ini
-
-Second check .buf file's stride and set the correct suffix and stride for
-every .buf file in ModReverse.py 's category_stride_dict:
-
-Example:category_stride_dict = {"Position": 40, "Texcoord": 20, "Blend": 32}
-
-
-Actually, you need to set every attribute in reverse.ini
-here is a example:
-```
-element_list = POSITION,NORMAL,TANGENT,COLOR,TEXCOORD,TEXCOORD1,BLENDWEIGHT,BLENDINDICES
-;dxgi_format = DXGI_FORMAT_R32_UINT
-dxgi_format = DXGI_FORMAT_R16_UINT
-reverse_mod_path = C:/Users/Administrator/Desktop/textureslightfishnets/
-ib_category_list = Head,Body,Dress
-vb_category_list = Position,Texcoord,Blend
-mod_name = Kokomi
-```
-
-And if it's needed, set the correct format in vertex_attr.ini,normally
-you won't need to set this,but sometimes need to do, for example: weapon mod.
-
-Techniquely all 3dmigoto mod can be reverse,so just be patience and don't give up.
-
-If you have any question or technique problem, you can ask me in ShaderFreedom Pro community,
-or just  open an issue.
-
-https://discord.gg/gEzkrsvJCt
+# 技术支持
+有不懂的可以来Shader Freedom社区提问

@@ -48,14 +48,14 @@ if __name__ == "__main__":
         max_count = 0
         min_count = 9999999
         while i < len(tmp_ib_bytearray):
-            tmp_byte = struct.pack(pack_sign, struct.unpack(unpack_sign, tmp_ib_bytearray[i:i+pack_stride])[0])
+            tmp_byte = struct.pack(write_pack_sign, struct.unpack(read_pack_sign, tmp_ib_bytearray[i:i + read_pack_stride])[0])
             ib_file_bytearray += tmp_byte
             now_count = int.from_bytes(tmp_byte,"little")
             if now_count >= max_count:
                 max_count = now_count
             if now_count <= min_count:
                 min_count = now_count
-            i += pack_stride
+            i += read_pack_stride
         print("min count " + str(min_count) + "   max count " + str(max_count))
         category_offset_dict[ib_category_list[ib_num]] = max_count
         tmp_ib_file.close()
@@ -169,18 +169,18 @@ if __name__ == "__main__":
             i = 0
             new_ib_file_bytearray = bytearray()
             while i < len(ib_file_bytearray):
-                tmp_byte = struct.pack(pack_sign, struct.unpack(unpack_sign,ib_file_bytearray[i:i+pack_stride])[0])
+                tmp_byte = struct.pack(pack_sign, struct.unpack(unpack_sign, ib_file_bytearray[i:i + read_pack_stride])[0])
                 int_num = int.from_bytes(tmp_byte, "little")
                 real_num = int(int_num - offset/stride)
                 # print(real_num)
 
 
-                real_byte = int.to_bytes(real_num, signed=False, byteorder="little",length=pack_stride)
+                real_byte = int.to_bytes(real_num, signed=False, byteorder="little", length=read_pack_stride)
                 # print(tmp_byte)
                 # print(real_byte)
                 # print(int.to_bytes(int_num, signed=False, byteorder="little",length=4))
                 new_ib_file_bytearray += real_byte
-                i += pack_stride
+                i += read_pack_stride
 
             new_ib_file = open(output_folder + ib_file_name,"wb")
             new_ib_file.write(new_ib_file_bytearray)
