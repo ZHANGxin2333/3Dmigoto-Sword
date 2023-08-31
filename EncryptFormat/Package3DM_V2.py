@@ -6,6 +6,11 @@ import struct
 前提条件是搞懂3Dmigoto到底是怎么解析资源文件的，以及解析后在内存中存放的结构是怎样的。
 
 
+
+
+
+
+
 '''
 
 def traverse_folder(folder_path):

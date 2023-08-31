@@ -39,8 +39,8 @@ output_vb_filename = output_folder + mod_name + ".vb"
 output_fmt_filename = output_folder + mod_name + ".fmt"
 
 # ------------------   format    --------------------------
-read_dxgi_format = preset_config["General"]["read_dxgi_format"]
-write_dxgi_format = preset_config["General"]["write_dxgi_format"]
+read_dxgi_format = preset_config["Format"]["read_dxgi_format"]
+write_dxgi_format = preset_config["Format"]["write_dxgi_format"]
 
 read_pack_sign = 'H'
 write_pack_sign = 'H'
