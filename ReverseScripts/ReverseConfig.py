@@ -26,7 +26,7 @@ vb_category_list = preset_config["General"]["vb_category_list"].split(",")
 element_list = preset_config["General"]["element_list"].split(",")
 
 # -----------------------------------Split--------------------------------------------
-repair_tangent = preset_config["Split"].getboolean("repair_tangent")
+repair_tangent = preset_config["Split"]["repair_tangent"]
 
 category_stride_dict = {option: int(value) for option, value in preset_config.items('CategoryStride')}
 print(category_stride_dict)

@@ -1,15 +1,23 @@
 from ReverseConfig import *
 
-# TODO 这里的part_names需要用mod_name和ib_category_list中的每个元素做拼接得到。
+# 这里的part_names需要用mod_name和ib_category_list中的每个元素做拼接得到。
 part_names = []
 for category in ib_category_list:
     part_name = mod_name + category
     part_names.append(part_name)
 
-#
+# 这里的格式仅用于读取逆向mod后导出的文件，所以和reverse的格式设置是分开的，以便应对多种情况
+read_ib_format = preset_config["Split"]["read_ib_format"]
+write_ib_format = preset_config["Split"]["write_ib_format"]
+
+# SplitBufferPath
+split_buffer_path = reverse_mod_path + "Split/"
+if not os.path.exists(split_buffer_path):
+    os.mkdir(split_buffer_path)
+
 
 # calculate the stride,here must use tmp_element_list from tmp.ini
-tmp_element_list = tmp_config["Ini"]["tmp_element_list"].split(",")
+tmp_element_list = preset_config["General"]["element_list"].split(",")
 
 # 因为下面这两个dict只有分割和生成配置文件时会用到，所以不放在Tailor_Util中
 # Calculate every replace_vb_slot's element_list,used in config file generate step and Split step.
@@ -39,8 +47,6 @@ for categpory in categories:
 # 获取所有的vb槽位
 category_list = list(category_element_list.keys())
 
-category_hash_dict = dict(tmp_config.items("category_hash"))
-category_slot_dict = dict(tmp_config.items("category_slot"))
 
 resource_ib_partnames = []
 for part_name in part_names:
@@ -117,7 +123,6 @@ def collect_ib(filename, offset):
 
 
 def collect_vb_Unity(vb_file_name, collect_stride, ignore_tangent=True):
-    print(split_str)
     print("Start to collect vb info from: " + vb_file_name)
     print("Collect_stride: " + str(collect_stride))
     print(category_element_list)
@@ -175,19 +180,7 @@ def collect_vb_Unity(vb_file_name, collect_stride, ignore_tangent=True):
                     tangent_float_list.append((tox, toy, toz, toa))
 
                 else:
-                    # 这里必须考虑到9684c4091fc9e35a的情况，所以我们需要在这里不读取BLENDWEIGHTS信息，不读取BLENDWEIGHTS必须满足自动补全的情况
-                    blendweights_extract_vb_file = ""
-                    if "BLENDWEIGHTS" in element_list:
-                        # 仅在有blend信息时进行读取
-                        blendweights_extract_vb_file = vertex_config["BLENDWEIGHTS"]["extract_vb_file"]
-
-                    if root_vs == "9684c4091fc9e35a" and vb_category == blendweights_extract_vb_file and auto_completion_blendweights:
-                        print("读取时，并不读取BLENDWEIGHTS部分")
-                        stride_blendweights = vertex_config["BLENDWEIGHTS"].getint("byte_width")
-                        vb_slot_bytearray += data[i:i + vb_stride - stride_blendweights]
-                    else:
-                        # print("在处理不为vb0时,vb_stride,实际值: " + str(vb_stride))
-                        vb_slot_bytearray += data[i:i + vb_stride]
+                    vb_slot_bytearray += data[i:i + vb_stride]
 
                 # print("collecting vb_slot:")
                 # print(vb_stride_slot)
@@ -203,8 +196,9 @@ def collect_vb_Unity(vb_file_name, collect_stride, ignore_tangent=True):
 
                 # 更新步长
                 i += vb_stride
+    print(len(position_float_list))
+    print(len(tangent_float_list))
     return collect_vb_slot_bytearray_dict, position_float_list, tangent_float_list
-
 
 
 
@@ -222,7 +216,7 @@ def split_ib_vb_file():
 
     # vb filename
     for part_name in part_names:
-        vb_filename = OutputFolder + part_name + ".vb"
+        vb_filename = split_buffer_path + part_name + ".vb"
 
         ignore_tangent = False
 
@@ -232,14 +226,9 @@ def split_ib_vb_file():
         # 这里获取了vb0:bytearray() 这样的字典
         vb_slot_bytearray_dict = {}
 
-        if Engine == "Unity":
-            vb_slot_bytearray_dict, position_float_list, tangent_float_list = collect_vb_Unity(vb_filename, stride,
+        vb_slot_bytearray_dict, position_float_list, tangent_float_list = collect_vb_Unity(vb_filename, stride,
                                                                                                ignore_tangent=ignore_tangent)
 
-        if Engine == "UE4":
-            vb_slot_bytearray_dict = collect_vb_UE4(vb_filename, stride)
-
-        print(split_str)
         for vb_slot_categpory in vb_slot_bytearray_dict:
             print("category:")
             print(vb_slot_categpory)
@@ -257,9 +246,6 @@ def split_ib_vb_file():
         # calculate nearest TANGENT,we use GIMI's method
         # see: https://github.com/SilentNightSound/GI-Model-Importer/pull/84
         if repair_tangent == "nearest":
-            # 读取vb0文件
-            position_hash = category_hash_dict.get(position_category)
-            vb0_filename = get_filter_filenames("vb0=" + position_hash, ".txt")[0]
 
             # 获取position
             position_vb_array = vb0_slot_bytearray_dict.get(position_category)
@@ -267,10 +253,10 @@ def split_ib_vb_file():
             vb0_slot_bytearray_dict[position_category] = position_new
 
         # collect ib
-        ib_filename = OutputFolder + part_name + ".ib"
+        ib_filename = split_buffer_path + part_name + ".ib"
         print("ib_filename: " + ib_filename)
         ib_buf = collect_ib(ib_filename, offset)
-        with open(OutputFolder + part_name + "_new.ib", "wb") as ib_buf_file:
+        with open(split_buffer_path + part_name + "_new.ib", "wb") as ib_buf_file:
             ib_buf_file.write(ib_buf)
 
         # After collect ib, set offset for the next time's collect
@@ -281,7 +267,7 @@ def split_ib_vb_file():
     for categpory in vb0_slot_bytearray_dict:
         vb0_byte_array = vb0_slot_bytearray_dict.get(categpory)
 
-        with open(OutputFolder + mod_name + "_" + categpory + ".buf", "wb") as byte_array_file:
+        with open(split_buffer_path + mod_name + categpory + ".buf", "wb") as byte_array_file:
             byte_array_file.write(vb0_byte_array)
 
     # set the draw number used in VertexLimitRaise
