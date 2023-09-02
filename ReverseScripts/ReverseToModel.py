@@ -1,10 +1,62 @@
 from ReverseConfig import *
 
 
+def get_original_ib_file():
+    # 读取ib文件，并在格式转换后全部堆叠到一起来输出到一个完整的ib文件
+    tmp_ib_file_bytearray = bytearray()
+    total_num = 0
+
+    tmp_category_offset_dict = {}
+    tmp_category_maxnum_dict = {}
+    for ib_num in range(len(ib_file_list)):
+        ib_filename = ib_file_list[ib_num]
+
+        tmp_ib_file = open(reverse_mod_path + ib_filename, "rb")
+        tmp_ib_bytearray = bytearray(tmp_ib_file.read())
+        tmp_ib_file.close()
+        print("len(tmp_ib_bytearray)")
+        print(len(tmp_ib_bytearray))
+        total_num += len(tmp_ib_bytearray)
+        # 这里需要逆向处理 https://zhuanlan.zhihu.com/p/387421751
+        # GIMI 6.0 使用1H GIMI7.0使用1I 但是其实关系不大，关键在于VB处理
+
+        i = 0
+        max_count = 0
+        min_count = 9999999
+        while i < len(tmp_ib_bytearray):
+            tmp_byte = struct.pack(write_pack_sign, struct.unpack(read_pack_sign, tmp_ib_bytearray[i:i + read_pack_stride])[0])
+            tmp_ib_file_bytearray += tmp_byte
+            now_count = int.from_bytes(tmp_byte, "little")
+            if now_count >= max_count:
+                max_count = now_count
+            if now_count <= min_count:
+                min_count = now_count
+            i += read_pack_stride
+        print("min count " + str(min_count) + "   max count " + str(max_count))
+        tmp_category_offset_dict[ib_category_list[ib_num]] = min_count
+        tmp_category_maxnum_dict[ib_category_list[ib_num]] = max_count
+    return tmp_ib_file_bytearray, tmp_category_offset_dict, tmp_category_maxnum_dict
+
+
+def collect_ib_subtract_offset(filename, offset):
+    ib = bytearray()
+    with open(filename, "rb") as f:
+        data = f.read()
+        data = bytearray(data)
+        i = 0
+        while i < len(data):
+            ib += struct.pack(write_pack_sign, struct.unpack(read_pack_sign, data[i:i + read_pack_stride])[0] - offset)
+            i += read_pack_stride
+    return ib
+
+
+
 if __name__ == "__main__":
+    # 读取mod文件列表
     mod_files = os.listdir(reverse_mod_path)
     print(mod_files)
 
+    # 读取ib文件列表
     ib_file_list = []
     for ib_category in ib_category_list:
         file_end_str = ib_category + ".ib"
@@ -26,49 +78,27 @@ if __name__ == "__main__":
     print(category_vb_filename_dict)
 
     # -------------------------------------------------------------------------------
-
+    # 拼接并写出原始的ib文件
+    ib_file_bytearray, category_offset_dict, category_maxnum_dict = get_original_ib_file()
     ib_file = open(output_ib_filename, "wb")
-    ib_file_bytearray = bytearray()
-    total_num = 0
-
-    category_offset_dict = {}
-    for ib_num in range(len(ib_file_list)):
-        ib_filename = ib_file_list[ib_num]
-
-        tmp_ib_file = open(reverse_mod_path + ib_filename,"rb")
-        tmp_ib_bytearray = bytearray(tmp_ib_file.read())
-        print("len(tmp_ib_bytearray)")
-        print(len(tmp_ib_bytearray))
-        total_num += len(tmp_ib_bytearray)
-        # 这里需要逆向处理 https://zhuanlan.zhihu.com/p/387421751
-        # GIMI 6.0 使用1H GIMI7.0使用1I 但是其实关系不大，关键在于VB处理
-
-
-        i = 0
-        max_count = 0
-        min_count = 9999999
-        while i < len(tmp_ib_bytearray):
-            tmp_byte = struct.pack(write_pack_sign, struct.unpack(read_pack_sign, tmp_ib_bytearray[i:i + read_pack_stride])[0])
-            ib_file_bytearray += tmp_byte
-            now_count = int.from_bytes(tmp_byte,"little")
-            if now_count >= max_count:
-                max_count = now_count
-            if now_count <= min_count:
-                min_count = now_count
-            i += read_pack_stride
-        print("min count " + str(min_count) + "   max count " + str(max_count))
-        category_offset_dict[ib_category_list[ib_num]] = max_count
-        tmp_ib_file.close()
-
     ib_file.write(ib_file_bytearray)
     ib_file.close()
 
+
+    print("--------------------------------------------------")
+    print("load Position,Texcoord,Blend info into category_vb_bytearray_dict")
     # load Position,Texcoord,Blend info into category_vb_bytearray_dict
+
+    # 这里拼接出来的完整vb的UV就已经错乱了
     vertex_count = 0
     category_vb_bytearray_list_dict = {}
-    for category in category_vb_filename_dict:
-        vb_filename = category_vb_filename_dict.get(category)
+    # print(category_vb_filename_dict)
+    # {'Position': 'NilouPosition.buf', 'Texcoord': 'NilouTexcoord.buf', 'Blend': 'NilouBlend.buf'}
 
+    for category in category_vb_filename_dict:
+        # 获取buf文件名称
+        vb_filename = category_vb_filename_dict.get(category)
+        # 读取buf文件数据
         tmp_vb_file = open(reverse_mod_path + vb_filename, "rb")
         data = bytearray(tmp_vb_file.read())
         tmp_vb_file.close()
@@ -84,22 +114,25 @@ if __name__ == "__main__":
         vertex_count = len(category_bytearray_list)
         category_vb_bytearray_list_dict[category] = category_bytearray_list
 
+    print("--------------------------------------------------")
+
     # Merge them into a final bytearray
     vb_file_bytearray = bytearray()
     print("vertex count:")
     print(vertex_count)
+    print(category_vb_bytearray_list_dict.keys())
     for i in range(vertex_count):
         for category in category_vb_bytearray_list_dict:
             bytearray_list = category_vb_bytearray_list_dict.get(category)
             add_byte = bytearray_list[i]
             vb_file_bytearray += add_byte
 
-
-    # Write to .vb file
+    # Write to .vb file 这里只是写入到了一个最终的vb文件
     vb_file = open(output_vb_filename, "wb")
     vb_file.write(vb_file_bytearray)
     vb_file.close()
 
+    # 开始组装并写出单独的fmt文件
     fmt_str = ""
     print(element_list)
 
@@ -129,65 +162,63 @@ if __name__ == "__main__":
     # combine final fmt str.
     fmt_str = fmt_str + "stride: " + str(stride) + "\n"
     fmt_str = fmt_str + "topology: " + "trianglelist" + "\n"
-
     fmt_str = fmt_str + "format: " + write_dxgi_format + "\n"
     fmt_str = fmt_str + element_str
 
-    # Write to .fmt file.
+    # Write to .fmt file.  写出到最终fmt文件
     fmt_file = open(output_fmt_filename, "w")
     fmt_file.write(fmt_str)
     fmt_file.close()
 
-    # Split vb file to seperate part.
-    offset = 0
-    for category in category_offset_dict:
-        category_offset = category_offset_dict.get(category)
-
+    # 组装出要输出的文件名的字典，用于后续处理
+    category_output_name_dict = {}
+    for category in ib_category_list:
         vb_file_name = mod_name + category + ".vb"
         ib_file_name = mod_name + category + ".ib"
         fmt_file_name = mod_name + category + ".fmt"
+        category_output_name_dict[category] = [ib_file_name, vb_file_name, fmt_file_name]
 
+        # 顺便输出fmt文件
         output_fmt_file = open(output_folder + fmt_file_name, "w")
         output_fmt_file.write(fmt_str)
         output_fmt_file.close()
 
+    # Convert every ib file into specific format,and write to reverse folder.
+    print("----------------------------------")
+    print(category_offset_dict)
+    print("----------------------------------")
+
+    for category in category_output_name_dict:
+        output_ib_name = category_output_name_dict.get(category)[0]
+        category_maxnum = category_offset_dict.get(category)
+        '''
+        这里所谓的offset，就是每个ib文件中出现的最小的数字,
+        这里是把原本的Head,Body,Dress的三个ib文件，分别减去其每个ib文件中最小的值，
+        使得格式全部变成从0开始的值，这样才能导入blender，
+        因为mod格式的ib文件，值是从偏移量那里开始的。
+        '''
+        original_ib_data = collect_ib_subtract_offset(reverse_mod_path + output_ib_name, category_maxnum)
+        with open(output_folder + output_ib_name, "wb") as output_ib_file:
+            output_ib_file.write(original_ib_data)
+
+    # 分割VB文件为BUF文件
+    left_offset_num = 0
+    print("--------------------------------------------------")
+    print(category_offset_dict)
+    print(category_maxnum_dict)
+    # 读取整体的vb文件
+    vb_file = open(output_vb_filename, "rb")
+    vb_file_bytearray = bytearray(vb_file.read())
+    vb_file.close()
+
+    for category in category_offset_dict:
+        print("Processing: " + str(category))
+        category_maxnum = category_maxnum_dict.get(category)
+        vb_file_name = category_output_name_dict.get(category)[1]
         print(vb_file_name)
-        # move ib file to reverse folder
-        # 只有offset = 0 的能直接复制过去，其他的都要减去offset
-        # shutil.copy2(reverse_mod_path + ib_file_name, output_folder + ib_file_name)
-        ib_file = open(reverse_mod_path + ib_file_name, "rb")
-        ib_file_bytearray = bytearray(ib_file.read())
-        ib_file.close()
 
-        i = 0
-        new_ib_file_bytearray = bytearray()
-        while i < len(ib_file_bytearray):
-            tmp_byte = struct.pack(write_pack_sign,
-                                   struct.unpack(read_pack_sign, ib_file_bytearray[i:i + read_pack_stride])[0])
-            int_num = int.from_bytes(tmp_byte, "little")
-            real_num = int(int_num - offset / stride)
-            # print(real_num)
-
-            real_byte = int.to_bytes(real_num, signed=False, byteorder="little", length=read_pack_stride)
-            # print(tmp_byte)
-            # print(real_byte)
-            # print(int.to_bytes(int_num, signed=False, byteorder="little",length=4))
-            new_ib_file_bytearray += real_byte
-            i += read_pack_stride
-
-        new_ib_file = open(output_folder + ib_file_name, "wb")
-        new_ib_file.write(new_ib_file_bytearray)
-        new_ib_file.close()
-
-        vb_file = open(output_vb_filename, "rb")
-        vb_file_bytearray = bytearray(vb_file.read())
-        vb_file.close()
-
-        print("len(vb_file_bytearray) / stride")
-        print(len(vb_file_bytearray) / stride)
-
-        left_offset = offset
-        right_offset = offset + stride * (category_offset + 1)
+        left_offset = left_offset_num
+        right_offset = left_offset_num + stride * (category_maxnum + 1)
 
         print("Left: " + str(left_offset/stride) + "  Right: " + str(right_offset/stride))
         output_vb_bytearray = vb_file_bytearray[left_offset:right_offset]
@@ -197,6 +228,10 @@ if __name__ == "__main__":
         output_vb_file.write(output_vb_bytearray)
         output_vb_file.close()
 
-        offset = stride * (category_offset + 1)
+        print("---------")
+        print("Category:" + str(category))
+        print("category_offset:" + str(category_maxnum))
+        left_offset_num =  stride * (category_maxnum + 1)
+        print("---------")
 
 
