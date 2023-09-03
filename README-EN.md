@@ -38,4 +38,4 @@ Techniquely all 3dmigoto mod can be reverse,so just be patience and don't give u
 If you have any question or technique problem, you can ask me in ShaderFreedom Pro community,
 or just  open an issue.
 
-https://discord.gg/gEzkrsvJCt
+技术交流QQ群：518029242
