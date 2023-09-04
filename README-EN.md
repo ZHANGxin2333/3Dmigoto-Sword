@@ -4,7 +4,6 @@
 
 2.Respect other's mod work, be nice to use it with only learn and reference purpose.
 
-3.The MIT LICENSE is only used to protect these code itself,Use these scripts at your own risk.
 # How to use format convert script?
 
 First, open the mod's .ini file and check the format, if IB file's format is
@@ -34,8 +33,5 @@ And if it's needed, set the correct format in vertex_attr.ini,normally
 you won't need to set this,but sometimes need to do, for example: weapon mod.
 
 Techniquely all 3dmigoto mod can be reverse,so just be patience and don't give up.
-
-If you have any question or technique problem, you can ask me in ShaderFreedom Pro community,
-or just  open an issue.
 
 技术交流QQ群：518029242
